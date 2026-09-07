@@ -11,7 +11,7 @@ training and fails in orbit.
 
 import numpy as np
 
-NUM_BINS = 25
+NUM_BINS = 100
 MAX_STARS = 24
 UNDISTORT_ITERS = 5     # must equal ST_UNDISTORT_ITERS in st_camera.c
 

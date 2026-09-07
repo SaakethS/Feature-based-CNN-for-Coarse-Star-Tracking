@@ -11,7 +11,10 @@ st_status_t st_pixel_to_vector(const st_camera_t *cam,
     int i;
 
     if (!cam || !out) return ST_ERR_NULL;
-    if (cam->fx == 0.0f || cam->fy == 0.0f) return ST_ERR_BAD_PARAM;
+    if (!isfinite(cam->fx) || !isfinite(cam->fy) ||
+        cam->fx <= 0.0f || cam->fy <= 0.0f || !isfinite(cam->cx) ||
+        !isfinite(cam->cy) || !isfinite(cam->k1) || !isfinite(cam->k2) ||
+        !isfinite(u) || !isfinite(v)) return ST_ERR_BAD_PARAM;
 
     /* Observed, distorted normalized coordinates. */
     xd = (u - cam->cx) / cam->fx;

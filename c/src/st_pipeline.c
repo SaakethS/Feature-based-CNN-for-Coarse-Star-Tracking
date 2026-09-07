@@ -16,15 +16,10 @@ void st_pipeline_init(st_pipeline_t *p)
     st_select_default_cfg(&p->sel);
     p->thresh_sigma = ST_THRESH_SIGMA;
 
-    /* Placeholder camera. REPLACE with your calibrated values before flight;
-     * a wrong focal length silently rescales every angle and the histogram
-     * will not match anything the network was trained on. */
-    p->cam.fx = 1800.0f;
-    p->cam.fy = 1800.0f;
-    p->cam.cx = (float)ST_IMG_W * 0.5f;
-    p->cam.cy = (float)ST_IMG_H * 0.5f;
-    p->cam.k1 = 0.0f;
-    p->cam.k2 = 0.0f;
+    /* Generated training camera; calibrate and retrain together before use. */
+    p->cam.fx = ST_TRAIN_FX; p->cam.fy = ST_TRAIN_FY;
+    p->cam.cx = ST_TRAIN_CX; p->cam.cy = ST_TRAIN_CY;
+    p->cam.k1 = ST_TRAIN_K1; p->cam.k2 = ST_TRAIN_K2;
 }
 
 st_status_t st_pipeline_run(st_pipeline_t *p,
@@ -35,20 +30,23 @@ st_status_t st_pipeline_run(st_pipeline_t *p,
     int n_detected = 0, n_used;
 
     if (!p || !img || !out) return ST_ERR_NULL;
+    memset(out, 0, sizeof(*out));
+    out->rejected = 1u;
+    p->last_n_used = 0;
+    p->last_n_detected = 0;
 
     /* 0. Background telemetry. Cheap, and the two numbers most worth
      *    downlinking when a frame fails: a rising background is the signature
      *    of stray light from the Sun, Moon, or Earth limb. */
     (void)st_estimate_background(img, &p->last_background, &p->last_sigma);
 
-    /* 1. Image -> star centroids. ST_ERR_OVERFLOW is not fatal: it means the
-     *    frame had more blobs than the table holds, and we keep what we got. */
+    /* 1. Reject overflow rather than classify a scan-order-truncated field. */
     rc = st_detect_stars(img, &p->ws, p->thresh_sigma,
                          p->stars, ST_MAX_BLOBS, &n_detected);
-    if (rc != ST_OK && rc != ST_ERR_OVERFLOW) return rc;
+    if (rc != ST_OK) return rc;
     p->last_n_detected = n_detected;
 
-    if (n_detected < 2) return ST_ERR_TOO_FEW;
+    if (n_detected < ST_MIN_STARS) return ST_ERR_TOO_FEW;
 
     /* 2. Keep the brightest stars only. This bounds the pair count and, more
      *    importantly, must match exactly what training did. */

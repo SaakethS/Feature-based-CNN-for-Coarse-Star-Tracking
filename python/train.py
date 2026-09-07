@@ -1,6 +1,6 @@
 """train.py — train the multi-label cell classifier.
 
-Deliberately written in plain NumPy. The network is 25 -> 96 -> 96 -> 529, which
+Deliberately written in plain NumPy. The network is 100 -> 96 -> 96 -> 529, which
 is small enough that a hand-written Adam loop trains it in seconds on a laptop,
 and writing it out has two real advantages for this project:
 
@@ -21,10 +21,12 @@ Run:
 """
 
 import argparse
+import json
+from st_experiment import digest
 import os
 import numpy as np
 
-GEN = os.path.join(os.path.dirname(__file__), "..", "gen")
+GEN = os.environ.get("ST_GEN_DIR", os.path.join(os.path.dirname(__file__), "..", "gen"))
 H1, H2 = 96, 96
 
 
@@ -102,18 +104,17 @@ class MLP:
 
 
 def evaluate(model, X, Y, k=8, thr=0.15):
-    """Two numbers that actually matter operationally.
-
-    top_k_recall : fraction of frames where at least one truly-visible cell is
-                   in the model's top k. This is what determines whether the
-                   pattern matcher gets a usable prior.
-    shortlist    : average number of cells above the accept threshold, i.e. how
-                   much the search space actually shrank from 529.
+    """Training diagnostics: top-k hit and exact default C-policy shortlist size.
+    Python implementation here avoids loading a stale C library while retraining.
+    Final evaluation invokes C directly.
     """
-    p = model.predict(X)
-    topk = np.argsort(-p, axis=1)[:, :k]
-    hit = np.take_along_axis(Y, topk, axis=1).max(axis=1)
-    return float(hit.mean()), float((p > thr).sum(1).mean())
+    p=model.predict(X);topk=np.argsort(-p,axis=1,kind='stable')[:,:k]
+    hit=np.take_along_axis(Y,topk,axis=1).max(axis=1)
+    sizes=[]
+    for row,indices in zip(p,topk):
+        chosen=indices[row[indices]>=thr]
+        sizes.append(1 if len(chosen) and row[chosen[0]]>=.9 else len(chosen))
+    return float(hit.mean()),float(np.mean(sizes))
 
 
 def main():
@@ -123,8 +124,13 @@ def main():
     ap.add_argument("--lr", type=float, default=3e-3)
     ap.add_argument("--seed", type=int, default=0)
     args = ap.parse_args()
+    if args.epochs < 1 or args.batch < 1 or args.lr <= 0:
+        ap.error("epochs, batch and lr must be positive")
 
     d = np.load(os.path.join(GEN, "dataset.npz"))
+    metadata = json.loads(str(d["metadata_json"]))
+    if digest(os.path.join(GEN, "bins.npy")) != metadata["bins_sha256"]:
+        raise ValueError("Dataset/bin mismatch")
     X, Y = d["X"].astype(np.float32), d["Y"].astype(np.float32)
 
     # Hold out the last 15% for validation. Frames are independent random
@@ -142,22 +148,35 @@ def main():
     rng = np.random.default_rng(args.seed)
     model = MLP(X.shape[1], Y.shape[1], rng)
 
+    best_loss = float("inf")
+    best_params = None
+    best_epoch = 0
     for ep in range(1, args.epochs + 1):
         idx = rng.permutation(len(Ztr))
         loss = 0.0
         for s in range(0, len(idx), args.batch):
             b = idx[s:s + args.batch]
             loss += model.step(Ztr[b], Ytr[b], args.lr)
-        loss /= max(1, len(idx) // args.batch)
+        loss /= max(1, (len(idx) + args.batch - 1) // args.batch)
+        logits = model.forward(Zva)[4]
+        val_loss = float((np.logaddexp(0, logits) - Yva * logits).mean())
+        if val_loss < best_loss:
+            best_loss, best_epoch = val_loss, ep
+            best_params = {k: getattr(model, k).copy() for k in model.params}
         if ep % 10 == 0 or ep == 1:
             rec, sl = evaluate(model, Zva, Yva)
             print(f"epoch {ep:3d}  loss {loss:.4f}  "
                   f"top-8 recall {rec:.3f}  mean shortlist {sl:.1f}")
 
+    for k, value in best_params.items(): setattr(model, k, value)
+    metadata["training"] = dict(seed=args.seed, epochs=args.epochs, best_epoch=best_epoch,
+                                batch=args.batch, lr=args.lr, validation_fraction=0.15)
+    metadata["dataset_sha256"] = digest(os.path.join(GEN, "dataset.npz"))
     rec, sl = evaluate(model, Zva, Yva)
     print(f"\nfinal: top-8 recall {rec:.3f}, mean shortlist {sl:.1f} of 529")
 
     np.savez(os.path.join(GEN, "model.npz"),
+             metadata_json=json.dumps(metadata,sort_keys=True),
              W1=model.W1, b1=model.b1, W2=model.W2, b2=model.b2,
              W3=model.W3, b3=model.b3, in_mean=mean, in_scale=scale)
     print("wrote gen/model.npz")

@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.o
+*.d
+*.so
+c/st_crosscheck
+c/st_pipeline_test
+.venv/
+experiments/
+gen/test_frame.pgm

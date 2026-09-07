@@ -15,6 +15,8 @@ uniform fake sky will make cells look more alike than they are.
 """
 
 import os
+import hashlib
+import warnings
 import numpy as np
 
 
@@ -28,8 +30,9 @@ def radec_to_vec(ra_deg, dec_deg):
 
 
 class Catalog:
-    def __init__(self, vec, mag):
+    def __init__(self, vec, mag, identity=None):
         self.vec = np.asarray(vec, dtype=np.float64)   # (N, 3) unit vectors
+        self.identity = identity or {"kind": "custom"}
         self.mag = np.asarray(mag, dtype=np.float64)   # (N,) visual magnitude
 
     def __len__(self):
@@ -37,12 +40,27 @@ class Catalog:
 
     @staticmethod
     def load(path=None, mag_limit=6.5, seed=0):
-        if path and os.path.exists(path):
+        if path:
+            if not os.path.isfile(path):
+                raise FileNotFoundError(f"Catalog does not exist: {path}")
             data = np.genfromtxt(path, delimiter=",", names=True)
+            data = np.atleast_1d(data)
+            if not {"ra_deg", "dec_deg", "mag"}.issubset(data.dtype.names or ()):
+                raise ValueError("Catalog requires ra_deg,dec_deg,mag columns")
+            if not all(np.isfinite(data[k]).all() for k in ("ra_deg", "dec_deg", "mag")):
+                raise ValueError("Catalog contains nonfinite values")
+            if np.any(np.abs(data["dec_deg"]) > 90) or np.any((data["ra_deg"] < 0) | (data["ra_deg"] >= 360)):
+                raise ValueError("Catalog coordinates are out of range")
             keep = data["mag"] <= mag_limit
+            if not keep.any():
+                raise ValueError("No catalog stars pass the magnitude limit")
             return Catalog(radec_to_vec(data["ra_deg"][keep],
                                         data["dec_deg"][keep]),
-                           data["mag"][keep])
+                           data["mag"][keep],
+                           {"kind": "csv", "name": os.path.basename(path),
+                            "sha256": hashlib.sha256(open(path, "rb").read()).hexdigest(),
+                            "mag_limit": mag_limit})
+        warnings.warn("Using synthetic placeholder sky; not real-sky validation", stacklevel=2)
         return Catalog.synthetic(mag_limit=mag_limit, seed=seed)
 
     @staticmethod
@@ -69,4 +87,5 @@ class Catalog:
         # Magnitudes drawn from the same 10^(0.48 m) cumulative law.
         u = rng.uniform(0.0, 1.0, n)
         mag = mag_limit + np.log10(u) / 0.48
-        return Catalog(vec, np.clip(mag, -1.5, mag_limit))
+        return Catalog(vec, np.clip(mag, -1.5, mag_limit),
+                       {"kind": "synthetic", "seed": seed, "mag_limit": mag_limit})

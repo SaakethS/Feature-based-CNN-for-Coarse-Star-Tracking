@@ -1,0 +1,839 @@
+{
+  "attempted": 30,
+  "usable": 27,
+  "failed_before_matching": 3,
+  "seed": 2087,
+  "catalog_limit": 2000,
+  "index_build_seconds": 0.7601567410001735,
+  "note": "Ground reference; online times exclude shared detection and offline index construction. Fallback cost reuses measured deterministic full solve. No flight-runtime claim.",
+  "full_success_all": 0.8666666666666667,
+  "assisted_success_all": 0.8666666666666667,
+  "mean_full_seconds": 0.011245326333294172,
+  "mean_assisted_seconds": 0.025982635592670163,
+  "rows": [
+    {
+      "full": {
+        "solved": true,
+        "matches": 16,
+        "catalog_stars": 2000,
+        "hypotheses": 5,
+        "pair_candidates": 1869,
+        "seconds": 0.0012836810001317644,
+        "residual_deg": 0.009872655848863343,
+        "error_deg": 0.002525639659686564,
+        "correct": true
+      },
+      "shortlist": {
+        "solved": true,
+        "matches": 16,
+        "catalog_stars": 424,
+        "hypotheses": 1,
+        "pair_candidates": 222,
+        "seconds": 0.0003089749998252955,
+        "residual_deg": 0.009872655848863343,
+        "error_deg": 0.002525639659686564,
+        "correct": true
+      },
+      "cells": [
+        332
+      ],
+      "classifier_seconds": 0.00021895900044910377,
+      "assisted_seconds": 0.0005279340002743993,
+      "assisted_correct": true
+    },
+    {
+      "full": {
+        "solved": true,
+        "matches": 24,
+        "catalog_stars": 2000,
+        "hypotheses": 15,
+        "pair_candidates": 1150,
+        "seconds": 0.0013805469998260378,
+        "residual_deg": 0.011552668961604434,
+        "error_deg": 0.0015799869678518035,
+        "correct": true
+      },
+      "shortlist": {
+        "solved": true,
+        "matches": 24,
+        "catalog_stars": 482,
+        "hypotheses": 7,
+        "pair_candidates": 243,
+        "seconds": 0.000689006999891717,
+        "residual_deg": 0.011552668961604434,
+        "error_deg": 0.0015799869678518035,
+        "correct": true
+      },
+      "cells": [
+        422
+      ],
+      "classifier_seconds": 7.647500024177134e-05,
+      "assisted_seconds": 0.0007654820001334883,
+      "assisted_correct": true
+    },
+    {
+      "full": {
+        "solved": true,
+        "matches": 20,
+        "catalog_stars": 2000,
+        "hypotheses": 55,
+        "pair_candidates": 1789,
+        "seconds": 0.004740030999528244,
+        "residual_deg": 0.010542074657344703,
+        "error_deg": 0.0014013294566174526,
+        "correct": true
+      },
+      "shortlist": {
+        "solved": true,
+        "matches": 20,
+        "catalog_stars": 467,
+        "hypotheses": 7,
+        "pair_candidates": 340,
+        "seconds": 0.0006913400002304115,
+        "residual_deg": 0.010542074657344703,
+        "error_deg": 0.0014013294566174526,
+        "correct": true
+      },
+      "cells": [
+        421
+      ],
+      "classifier_seconds": 9.721599963086192e-05,
+      "assisted_seconds": 0.0007885559998612734,
+      "assisted_correct": true
+    },
+    {
+      "full": {
+        "solved": true,
+        "matches": 24,
+        "catalog_stars": 2000,
+        "hypotheses": 17,
+        "pair_candidates": 754,
+        "seconds": 0.0016130470003190567,
+        "residual_deg": 0.01283539330666087,
+        "error_deg": 0.0009704315911306678,
+        "correct": true
+      },
+      "shortlist": {
+        "solved": true,
+        "matches": 24,
+        "catalog_stars": 507,
+        "hypotheses": 1,
+        "pair_candidates": 161,
+        "seconds": 0.0002662500000951695,
+        "residual_deg": 0.01283539330666087,
+        "error_deg": 0.0009704315911306678,
+        "correct": true
+      },
+      "cells": [
+        102
+      ],
+      "classifier_seconds": 8.749100015847944e-05,
+      "assisted_seconds": 0.00035374100025364896,
+      "assisted_correct": true
+    },
+    {
+      "full": {
+        "solved": true,
+        "matches": 24,
+        "catalog_stars": 2000,
+        "hypotheses": 39,
+        "pair_candidates": 860,
+        "seconds": 0.002689705999728176,
+        "residual_deg": 0.010444583605083626,
+        "error_deg": 0.0022860302355791726,
+        "correct": true
+      },
+      "shortlist": {
+        "solved": true,
+        "matches": 24,
+        "catalog_stars": 503,
+        "hypotheses": 7,
+        "pair_candidates": 186,
+        "seconds": 0.0009969789998649503,
+        "residual_deg": 0.010444583605083626,
+        "error_deg": 0.0022860302355791726,
+        "correct": true
+      },
+      "cells": [
+        451
+      ],
+      "classifier_seconds": 8.124299984046957e-05,
+      "assisted_seconds": 0.0010782219997054199,
+      "assisted_correct": true
+    },
+    {
+      "full": {
+        "solved": true,
+        "matches": 24,
+        "catalog_stars": 2000,
+        "hypotheses": 9,
+        "pair_candidates": 1073,
+        "seconds": 0.0007503090000682278,
+        "residual_deg": 0.010510201846593356,
+        "error_deg": 0.0007084325415552236,
+        "correct": true
+      },
+      "shortlist": {
+        "solved": true,
+        "matches": 24,
+        "catalog_stars": 553,
+        "hypotheses": 7,
+        "pair_candidates": 321,
+        "seconds": 0.0005742040002587601,
+        "residual_deg": 0.010510201846593356,
+        "error_deg": 0.0007084325415552236,
+        "correct": true
+      },
+      "cells": [
+        118
+      ],
+      "classifier_seconds": 8.126299962896155e-05,
+      "assisted_seconds": 0.0006554669998877216,
+      "assisted_correct": true
+    },
+    {
+      "full": {
+        "solved": true,
+        "matches": 20,
+        "catalog_stars": 2000,
+        "hypotheses": 7,
+        "pair_candidates": 379,
+        "seconds": 0.000689227000293613,
+        "residual_deg": 0.01245934578945357,
+        "error_deg": 0.005875113309087665,
+        "correct": true
+      },
+      "shortlist": {
+        "solved": true,
+        "matches": 20,
+        "catalog_stars": 1132,
+        "hypotheses": 3,
+        "pair_candidates": 187,
+        "seconds": 0.000508955999976024,
+        "residual_deg": 0.01245934578945357,
+        "error_deg": 0.005875113309087665,
+        "correct": true
+      },
+      "cells": [
+        242,
+        243,
+        203,
+        244,
+        512,
+        202,
+        283,
+        496
+      ],
+      "classifier_seconds": 9.995000073104165e-05,
+      "assisted_seconds": 0.0006089060007070657,
+      "assisted_correct": true
+    },
+    {
+      "full": {
+        "solved": true,
+        "matches": 24,
+        "catalog_stars": 2000,
+        "hypotheses": 9,
+        "pair_candidates": 946,
+        "seconds": 0.0007620659998792689,
+        "residual_deg": 0.008767155702133477,
+        "error_deg": 0.0010268096801430162,
+        "correct": true
+      },
+      "shortlist": {
+        "solved": true,
+        "matches": 24,
+        "catalog_stars": 576,
+        "hypotheses": 5,
+        "pair_candidates": 255,
+        "seconds": 0.00051826999970217,
+        "residual_deg": 0.008767155702133477,
+        "error_deg": 0.0010268096801430162,
+        "correct": true
+      },
+      "cells": [
+        47
+      ],
+      "classifier_seconds": 0.0001225850000992068,
+      "assisted_seconds": 0.0006408549998013768,
+      "assisted_correct": true
+    },
+    {
+      "full": {
+        "solved": true,
+        "matches": 9,
+        "catalog_stars": 2000,
+        "hypotheses": 61,
+        "pair_candidates": 1509,
+        "seconds": 0.003618914000071527,
+        "residual_deg": 0.0125006975448702,
+        "error_deg": 0.002631094623947916,
+        "correct": true
+      },
+      "shortlist": {
+        "solved": true,
+        "matches": 9,
+        "catalog_stars": 450,
+        "hypotheses": 1,
+        "pair_candidates": 234,
+        "seconds": 0.00040795400036586216,
+        "residual_deg": 0.0125006975448702,
+        "error_deg": 0.002631094623947916,
+        "correct": true
+      },
+      "cells": [
+        269
+      ],
+      "classifier_seconds": 9.826800032897154e-05,
+      "assisted_seconds": 0.0005062220006948337,
+      "assisted_correct": true
+    },
+    {
+      "full": {
+        "solved": true,
+        "matches": 6,
+        "catalog_stars": 2000,
+        "hypotheses": 27,
+        "pair_candidates": 1649,
+        "seconds": 0.002003935000175261,
+        "residual_deg": 0.007609245131998819,
+        "error_deg": 0.002580285895273494,
+        "correct": true
+      },
+      "shortlist": {
+        "solved": true,
+        "matches": 6,
+        "catalog_stars": 332,
+        "hypotheses": 3,
+        "pair_candidates": 137,
+        "seconds": 0.0007287359994734288,
+        "residual_deg": 0.007609245131998819,
+        "error_deg": 0.002580285895273494,
+        "correct": true
+      },
+      "cells": [
+        145
+      ],
+      "classifier_seconds": 9.275900083594024e-05,
+      "assisted_seconds": 0.0008214950003093691,
+      "assisted_correct": true
+    },
+    {
+      "full": {
+        "solved": false,
+        "rotation": null,
+        "matches": 0,
+        "catalog_stars": 2000,
+        "hypotheses": 5000,
+        "pair_candidates": 3065,
+        "seconds": 0.2410167050002201,
+        "error_deg": null,
+        "correct": false
+      },
+      "shortlist": {
+        "solved": false,
+        "rotation": null,
+        "matches": 0,
+        "catalog_stars": 469,
+        "hypotheses": 3558,
+        "pair_candidates": 1779,
+        "seconds": 0.1978515900000275,
+        "error_deg": null,
+        "correct": false
+      },
+      "cells": [
+        74
+      ],
+      "classifier_seconds": 9.528400005365256e-05,
+      "assisted_seconds": 0.43896357900030125,
+      "assisted_correct": false
+    },
+    {
+      "full": {
+        "solved": true,
+        "matches": 24,
+        "catalog_stars": 2000,
+        "hypotheses": 3,
+        "pair_candidates": 769,
+        "seconds": 0.0005810550001115189,
+        "residual_deg": 0.010967703389428894,
+        "error_deg": 0.0028647305716678834,
+        "correct": true
+      },
+      "shortlist": {
+        "solved": true,
+        "matches": 24,
+        "catalog_stars": 428,
+        "hypotheses": 1,
+        "pair_candidates": 112,
+        "seconds": 0.0002838769996742485,
+        "residual_deg": 0.010967703389428894,
+        "error_deg": 0.0028647305716678834,
+        "correct": true
+      },
+      "cells": [
+        490
+      ],
+      "classifier_seconds": 0.00013534299978346098,
+      "assisted_seconds": 0.0004192199994577095,
+      "assisted_correct": true
+    },
+    {
+      "full": {
+        "solved": true,
+        "matches": 11,
+        "catalog_stars": 2000,
+        "hypotheses": 351,
+        "pair_candidates": 1865,
+        "seconds": 0.016806843999802368,
+        "residual_deg": 0.015491792288099913,
+        "error_deg": 0.005105586394246388,
+        "correct": true
+      },
+      "shortlist": {
+        "solved": true,
+        "matches": 11,
+        "catalog_stars": 407,
+        "hypotheses": 53,
+        "pair_candidates": 200,
+        "seconds": 0.003913135999937367,
+        "residual_deg": 0.015491792288099913,
+        "error_deg": 0.005105586394246388,
+        "correct": true
+      },
+      "cells": [
+        227
+      ],
+      "classifier_seconds": 9.241899988410296e-05,
+      "assisted_seconds": 0.00400555499982147,
+      "assisted_correct": true
+    },
+    {
+      "full": {
+        "solved": true,
+        "matches": 14,
+        "catalog_stars": 2000,
+        "hypotheses": 12,
+        "pair_candidates": 543,
+        "seconds": 0.0008874550003383774,
+        "residual_deg": 0.012134656320991423,
+        "error_deg": 0.00825204564809712,
+        "correct": true
+      },
+      "shortlist": {
+        "solved": true,
+        "matches": 14,
+        "catalog_stars": 524,
+        "hypotheses": 6,
+        "pair_candidates": 175,
+        "seconds": 0.0005960469998171902,
+        "residual_deg": 0.012134656320991423,
+        "error_deg": 0.00825204564809712,
+        "correct": true
+      },
+      "cells": [
+        163
+      ],
+      "classifier_seconds": 0.00012072200024704216,
+      "assisted_seconds": 0.0007167690000642324,
+      "assisted_correct": true
+    },
+    {
+      "full": {
+        "solved": true,
+        "matches": 24,
+        "catalog_stars": 2000,
+        "hypotheses": 1,
+        "pair_candidates": 867,
+        "seconds": 0.0002878929999496904,
+        "residual_deg": 0.011826945060511617,
+        "error_deg": 0.004751511223655152,
+        "correct": true
+      },
+      "shortlist": {
+        "solved": true,
+        "matches": 24,
+        "catalog_stars": 564,
+        "hypotheses": 1,
+        "pair_candidates": 279,
+        "seconds": 0.0002560950006227358,
+        "residual_deg": 0.011826945060511617,
+        "error_deg": 0.004751511223655152,
+        "correct": true
+      },
+      "cells": [
+        89
+      ],
+      "classifier_seconds": 0.00010239399944111938,
+      "assisted_seconds": 0.0003584890000638552,
+      "assisted_correct": true
+    },
+    {
+      "full": {
+        "solved": true,
+        "matches": 24,
+        "catalog_stars": 2000,
+        "hypotheses": 1,
+        "pair_candidates": 1275,
+        "seconds": 0.00032046199976321077,
+        "residual_deg": 0.007155304524208308,
+        "error_deg": 0.0007426564674309989,
+        "correct": true
+      },
+      "shortlist": {
+        "solved": true,
+        "matches": 24,
+        "catalog_stars": 521,
+        "hypotheses": 1,
+        "pair_candidates": 290,
+        "seconds": 0.000263896999967983,
+        "residual_deg": 0.007155304524208308,
+        "error_deg": 0.0007426564674309989,
+        "correct": true
+      },
+      "cells": [
+        455
+      ],
+      "classifier_seconds": 0.00011021599948435323,
+      "assisted_seconds": 0.0003741129994523362,
+      "assisted_correct": true
+    },
+    {
+      "full": {
+        "solved": true,
+        "matches": 8,
+        "catalog_stars": 2000,
+        "hypotheses": 65,
+        "pair_candidates": 1572,
+        "seconds": 0.003522519999933138,
+        "residual_deg": 0.007778418818989822,
+        "error_deg": 0.00159057503280137,
+        "correct": true
+      },
+      "shortlist": {
+        "solved": true,
+        "matches": 8,
+        "catalog_stars": 336,
+        "hypotheses": 7,
+        "pair_candidates": 143,
+        "seconds": 0.0005879439995624125,
+        "residual_deg": 0.007778418818989822,
+        "error_deg": 0.00159057503280137,
+        "correct": true
+      },
+      "cells": [
+        111
+      ],
+      "classifier_seconds": 0.00013108700022712583,
+      "assisted_seconds": 0.0007190309997895383,
+      "assisted_correct": true
+    },
+    {
+      "full": {
+        "solved": true,
+        "matches": 21,
+        "catalog_stars": 2000,
+        "hypotheses": 25,
+        "pair_candidates": 1346,
+        "seconds": 0.0015180029995462974,
+        "residual_deg": 0.011532862264662623,
+        "error_deg": 0.003945245987098025,
+        "correct": true
+      },
+      "shortlist": {
+        "solved": true,
+        "matches": 21,
+        "catalog_stars": 387,
+        "hypotheses": 5,
+        "pair_candidates": 164,
+        "seconds": 0.0005003030000807485,
+        "residual_deg": 0.011532862264662623,
+        "error_deg": 0.003945245987098025,
+        "correct": true
+      },
+      "cells": [
+        262
+      ],
+      "classifier_seconds": 8.586900003137998e-05,
+      "assisted_seconds": 0.0005861720001121284,
+      "assisted_correct": true
+    },
+    {
+      "full": {
+        "solved": true,
+        "matches": 21,
+        "catalog_stars": 2000,
+        "hypotheses": 39,
+        "pair_candidates": 1615,
+        "seconds": 0.00242128199988656,
+        "residual_deg": 0.00942499081790875,
+        "error_deg": 0.006750603311777618,
+        "correct": true
+      },
+      "shortlist": {
+        "solved": true,
+        "matches": 21,
+        "catalog_stars": 574,
+        "hypotheses": 11,
+        "pair_candidates": 449,
+        "seconds": 0.0007911300008345279,
+        "residual_deg": 0.00942499081790875,
+        "error_deg": 0.006750603311777618,
+        "correct": true
+      },
+      "cells": [
+        67
+      ],
+      "classifier_seconds": 8.152200007316424e-05,
+      "assisted_seconds": 0.0008726520009076921,
+      "assisted_correct": true
+    },
+    {
+      "full": {
+        "solved": true,
+        "matches": 24,
+        "catalog_stars": 2000,
+        "hypotheses": 9,
+        "pair_candidates": 330,
+        "seconds": 0.0006940439998288639,
+        "residual_deg": 0.011850966184705146,
+        "error_deg": 0.001728238637078661,
+        "correct": true
+      },
+      "shortlist": {
+        "solved": true,
+        "matches": 24,
+        "catalog_stars": 603,
+        "hypotheses": 7,
+        "pair_candidates": 137,
+        "seconds": 0.0006125520003479323,
+        "residual_deg": 0.011850966184705146,
+        "error_deg": 0.001728238637078661,
+        "correct": true
+      },
+      "cells": [
+        38
+      ],
+      "classifier_seconds": 7.781699969200417e-05,
+      "assisted_seconds": 0.0006903690000399365,
+      "assisted_correct": true
+    },
+    {
+      "full": {
+        "solved": true,
+        "matches": 11,
+        "catalog_stars": 2000,
+        "hypotheses": 3,
+        "pair_candidates": 1484,
+        "seconds": 0.0003726109998751781,
+        "residual_deg": 0.011411503178112245,
+        "error_deg": 0.007328798753158489,
+        "correct": true
+      },
+      "shortlist": {
+        "solved": true,
+        "matches": 11,
+        "catalog_stars": 450,
+        "hypotheses": 3,
+        "pair_candidates": 313,
+        "seconds": 0.0003632159996413975,
+        "residual_deg": 0.011411503178112245,
+        "error_deg": 0.007328798753158489,
+        "correct": true
+      },
+      "cells": [
+        271
+      ],
+      "classifier_seconds": 7.464200007234467e-05,
+      "assisted_seconds": 0.0004378579997137422,
+      "assisted_correct": true
+    },
+    {
+      "full": {
+        "solved": true,
+        "matches": 10,
+        "catalog_stars": 2000,
+        "hypotheses": 149,
+        "pair_candidates": 1943,
+        "seconds": 0.0073024960001930594,
+        "residual_deg": 0.00935823563275191,
+        "error_deg": 0.00536222596519602,
+        "correct": true
+      },
+      "shortlist": {
+        "solved": true,
+        "matches": 10,
+        "catalog_stars": 482,
+        "hypotheses": 25,
+        "pair_candidates": 336,
+        "seconds": 0.0014109220001046197,
+        "residual_deg": 0.00935823563275191,
+        "error_deg": 0.00536222596519602,
+        "correct": true
+      },
+      "cells": [
+        422
+      ],
+      "classifier_seconds": 6.613000005017966e-05,
+      "assisted_seconds": 0.0014770520001547993,
+      "assisted_correct": true
+    },
+    {
+      "full": {
+        "solved": true,
+        "matches": 20,
+        "catalog_stars": 2000,
+        "hypotheses": 7,
+        "pair_candidates": 542,
+        "seconds": 0.0005668229996445007,
+        "residual_deg": 0.00880260042317253,
+        "error_deg": 0.005211930437958014,
+        "correct": true
+      },
+      "shortlist": {
+        "solved": true,
+        "matches": 20,
+        "catalog_stars": 471,
+        "hypotheses": 3,
+        "pair_candidates": 130,
+        "seconds": 0.00033911999980773544,
+        "residual_deg": 0.00880260042317253,
+        "error_deg": 0.005211930437958014,
+        "correct": true
+      },
+      "cells": [
+        203
+      ],
+      "classifier_seconds": 9.381200015923241e-05,
+      "assisted_seconds": 0.00043293199996696785,
+      "assisted_correct": true
+    },
+    {
+      "full": {
+        "solved": true,
+        "matches": 6,
+        "catalog_stars": 2000,
+        "hypotheses": 1,
+        "pair_candidates": 1371,
+        "seconds": 0.00025030699998751516,
+        "residual_deg": 0.012825984660835123,
+        "error_deg": 0.009049187766217158,
+        "correct": true
+      },
+      "shortlist": {
+        "solved": true,
+        "matches": 6,
+        "catalog_stars": 452,
+        "hypotheses": 1,
+        "pair_candidates": 235,
+        "seconds": 0.0002221040003860253,
+        "residual_deg": 0.012825984660835123,
+        "error_deg": 0.009049187766217158,
+        "correct": true
+      },
+      "cells": [
+        280
+      ],
+      "classifier_seconds": 6.790200040995842e-05,
+      "assisted_seconds": 0.0002900060007959837,
+      "assisted_correct": true
+    },
+    {
+      "full": {
+        "solved": true,
+        "matches": 6,
+        "catalog_stars": 2000,
+        "hypotheses": 105,
+        "pair_candidates": 1322,
+        "seconds": 0.005435086000034062,
+        "residual_deg": 0.011770113450684247,
+        "error_deg": 0.009282190889988802,
+        "correct": true
+      },
+      "shortlist": {
+        "solved": false,
+        "rotation": null,
+        "matches": 0,
+        "catalog_stars": 462,
+        "hypotheses": 5000,
+        "pair_candidates": 2543,
+        "seconds": 0.23740745600025548,
+        "error_deg": null,
+        "correct": false
+      },
+      "cells": [
+        395
+      ],
+      "classifier_seconds": 6.24939993940643e-05,
+      "assisted_seconds": 0.2429050359996836,
+      "assisted_correct": true
+    },
+    {
+      "full": {
+        "solved": true,
+        "matches": 24,
+        "catalog_stars": 2000,
+        "hypotheses": 9,
+        "pair_candidates": 1081,
+        "seconds": 0.0008490969994454645,
+        "residual_deg": 0.010756224889371316,
+        "error_deg": 0.0059070710011589565,
+        "correct": true
+      },
+      "shortlist": {
+        "solved": true,
+        "matches": 24,
+        "catalog_stars": 549,
+        "hypotheses": 3,
+        "pair_candidates": 248,
+        "seconds": 0.0006205829995451495,
+        "residual_deg": 0.010756224889371316,
+        "error_deg": 0.0059070710011589565,
+        "correct": true
+      },
+      "cells": [
+        511
+      ],
+      "classifier_seconds": 0.0001398900003550807,
+      "assisted_seconds": 0.0007604729999002302,
+      "assisted_correct": true
+    },
+    {
+      "full": {
+        "solved": true,
+        "matches": 23,
+        "catalog_stars": 2000,
+        "hypotheses": 19,
+        "pair_candidates": 1697,
+        "seconds": 0.001259665000361565,
+        "residual_deg": 0.011409936413922135,
+        "error_deg": 0.0017346255975668166,
+        "correct": true
+      },
+      "shortlist": {
+        "solved": true,
+        "matches": 23,
+        "catalog_stars": 657,
+        "hypotheses": 7,
+        "pair_candidates": 422,
+        "seconds": 0.0006798619997425703,
+        "residual_deg": 0.011409936413922135,
+        "error_deg": 0.0017346255975668166,
+        "correct": true
+      },
+      "cells": [
+        413,
+        377,
+        412,
+        339,
+        446,
+        340,
+        376,
+        341
+      ],
+      "classifier_seconds": 9.511300049780402e-05,
+      "assisted_seconds": 0.0007749750002403744,
+      "assisted_correct": true
+    }
+  ]
+}

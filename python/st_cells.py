@@ -30,9 +30,14 @@ pipeline does not care how cells are defined, only that the definition is
 fixed. Confirm this with Dr. Lee before generating a full training set.
 """
 
+import os
 import numpy as np
 
-NUM_CELLS = 529
+# The partition size is a design parameter, not a constant of nature: it must
+# be chosen together with the field of view so that a frame covers only a few
+# cells. Set ST_NUM_CELLS in the environment to sweep it; the default matches
+# the architecture document.
+NUM_CELLS = int(os.environ.get("ST_NUM_CELLS", "529"))
 
 
 def _build_partition(n_cells=NUM_CELLS):

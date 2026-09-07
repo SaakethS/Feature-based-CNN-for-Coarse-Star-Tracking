@@ -1,141 +1,137 @@
-# Star Tracker ML Cell Classification — C flight path + Python ground tools
+# Feature-based neural sky-cell classification for coarse star tracking
 
-A working skeleton of the architecture in *Star Tracker ML Cell-Classification
-Architecture*: an onboard classifier that turns a star image into a shortlist of
-sky cells, shrinking the lost-in-space search space before the pattern matcher
-and EKF run.
+A research acquisition pipeline: 8-bit image → C star detection → calibrated
+unit vectors → angular histogram → MLP → shortlist of 529 sky cells.
+A ground-only geometric matcher estimates attitude and benchmarks full-search
+fallback. The implemented neural network is an MLP, not a CNN. No EKF is included.
 
-**Everything that runs in orbit is C. Everything that runs on the ground is
-Python.** The two are kept honest by a cross-check that feeds identical inputs
-to both and compares the numbers.
+## What is included
 
----
+- C99 detector, radial camera model, 100-bin angular feature, 100 → 96 → 96 → 529
+  MLP (70,321 trainable parameters), and bounded shortlist selection.
+- Python rendered-image training through the **actual C detector**, plus an
+  explicitly approximate analytic simulator for exploratory experiments.
+- A source-attributed 8,785-star Hipparcos subset with V magnitude < 6.5.
+- 5,819 usable training/validation frames from 6,000 rendered attempts, recorded
+  detections and attitudes, trained weights, matching bins and generated C header.
+- Exact C-policy evaluation, feature comparison, isolated FOV experiments,
+  geometric acquisition benchmark, regression tests and recorded results.
+- Original 25-bin weights preserved under `gen/legacy/`; these are not active.
 
-## Quick start
+## Quick start (Linux or Windows with WSL)
+
+Use a Linux/WSL terminal with Python 3.10+, a C99 compiler, and GNU Make.
+The host bridge uses a Linux shared library; native Windows DLL builds are not
+provided. Run from the extracted `startracker` directory:
 
 ```bash
-cd python
-python3 make_dataset.py --n 20000     # synthetic frames -> gen/dataset.npz
-python3 train.py --epochs 60          # -> gen/model.npz
-python3 export_model.py               # -> gen/model_params.h
-
-cd ../c && make                       # build the flight path
-cd ../python && python3 crosscheck.py # prove C == Python
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install -r requirements.txt
+make -C c all bridge
+python3 python/test_regressions.py
+python3 python/crosscheck.py
+python3 python/test_end_to_end.py
+python3 python/evaluate.py --n 1000 --out gen/evaluation.json
 ```
 
----
+The supplied model is already trained. For training again on the included dataset:
 
-## Layout
-
-```
-c/
-  include/st_config.h     compile-time limits (image size, star cap, bins, cells)
-  include/st_types.h      shared plain-data types and return codes
-  src/st_centroid.c       image -> sub-pixel star centroids
-  src/st_camera.c         pixel -> unit direction vector (with undistortion)
-  src/st_feature.c        vectors -> pairwise angular distance histogram
-  src/st_mlp.c            the trained network's forward pass
-  src/st_select.c         probabilities -> candidate cell shortlist
-  src/st_pipeline.c       the one call flight software makes
-  tests/crosscheck_main.c exposes the feature + network stages to Python
-  tests/pipeline_main.c   runs a PGM through the whole path and times it
-
-python/
-  st_cells.py             the 529-cell sky partition (the definition of a label)
-  st_catalog.py           Hipparcos loader, with a synthetic fallback
-  st_features.py          reference twin of st_camera.c + st_feature.c
-  st_sim.py               synthetic frames and the domain-randomization model
-  make_dataset.py         builds the training set and fits the bin edges
-  train.py                NumPy multi-label trainer (BCE, Adam)
-  export_model.py         writes gen/model_params.h
-  crosscheck.py           THE test — C vs Python, feature and network
-
-gen/                      generated: bins, dataset, weights, model_params.h
+```bash
+OPENBLAS_NUM_THREADS=1 python3 python/train.py --epochs 120
+python3 python/export_model.py
+make -C c all bridge
 ```
 
-## Design decisions worth knowing
+To generate a new dataset first (this replaces the active dataset and bins):
 
-**No TensorFlow Lite.** The network is 25 → 96 → 96 → 529 — three matrix-vector
-products. `st_mlp.c` is about eighty lines and has no dependencies beyond
-`libm`. That removes a cross-compiled runtime from the flight build and keeps
-the arithmetic auditable, which is the explainability argument the architecture
-document already commits to. TFLite earns its keep for large convolutional
-models; this is not one.
-
-**No `malloc`, anywhere.** Every buffer is statically sized from `st_config.h`,
-so worst-case memory is known at compile time. `st_pipeline_t` is about 1.2 MB,
-dominated by the one-byte-per-pixel detection mask.
-
-**No `acos` in the feature.** The angle between unit vectors **a** and **b** is
-acos(**a**·**b**), but a histogram only needs the bin, and cosine is monotonic
-on [0, π]. Bin edges are stored in cosine space, descending, and compared
-against raw dot products — 276 transcendental calls saved per frame.
-
-**Star cap of 24.** Pair count grows as N(N−1)/2. Capping at the 24 brightest
-gives 276 pairs and, more importantly, makes the feature well-defined: training
-and flight must agree on *which* stars go into the histogram, not just how they
-are binned.
-
-**Standardization lives inside the model.** The input mean and scale are
-exported alongside the weights and applied in `st_mlp_forward`, so the C and
-Python paths cannot disagree about whether the transform was applied.
-
-**Compile-time guards.** `model_params.h` contains `#error` directives that fail
-the build if `ST_NUM_BINS`, `ST_NUM_CELLS`, `ST_MAX_STARS`, or the hidden layer
-widths ever drift from what the model was trained with.
-
-**`-ffp-contract=off`.** By default GCC may fuse multiply-add pairs, which is
-more accurate but gives different results from NumPy. Disabling it is what lets
-the cross-check use a 1e-6 tolerance instead of a loose one that would hide real
-bugs.
-
-## What the cross-check proves
-
-```
-[features] 200 cases
-  max |C - Python| histogram : 7.5e-09   (tol 1e-06)
-  max |C - Python| network   : 8.0e-07   (tol 2e-05)
-[centroids]
-  C used 24 centroids, 24 matched a rendered star within 1.5 px
-  centroid error: median 0.385 px, 95th pct 0.648 px
+```bash
+python3 python/make_dataset.py --n 20000 --seed 1 --mode rendered --catalog data/hipparcos_mag65.csv
+python3 python/train.py --epochs 120
+python3 python/export_model.py
+make -C c all bridge
+python3 python/evaluate.py --n 1000 --seed 999 --out gen/evaluation.json
 ```
 
-The feature test runs with non-zero distortion coefficients on purpose: with
-k1 = k2 = 0 a broken undistortion would pass unnoticed.
+Regenerate weights after regenerating bins. Hash checks deliberately reject a
+mixed model/bin combination. Do not change the C bin count without matching
+Python changes, retraining and export. Header guards detect ABI mismatch.
+The active model's camera constants are exported together with its weights.
+Fresh dataset generation uses independent bin-fitting scenes; the bundled dataset
+was rebinned using only its first 70% of recorded detections after feature selection.
+Both keep evaluation frames out of bin fitting. Metadata records that distinction.
 
-Timing on a desktop x86 core is about 2.9 ms/frame for the whole path,
-centroiding included. Expect roughly 3–6× that on a Pi 5 core; `make pi`
-cross-compiles with `-mcpu=cortex-a76`.
+## Measured results
 
----
+See `VALIDATION.md` and the JSON files under `gen/` for exact definitions and limits.
+On 1,000 new rendered Hipparcos scenes, seed 999:
 
-## What is still a placeholder
+| Metric | Result |
+|---|---:|
+| Attempts / usable frames | 1,000 / 983 |
+| Visible-cell hit rate, counting detector failures | 94.2% |
+| Visible-cell hit rate on usable frames | 95.83% |
+| Mean shortlist on usable frames | 1.90 cells |
+| Top-eight hit rate on usable frames | 97.36% |
+| Random top-eight baseline | 31.35% |
 
-These are marked in the code and must be replaced before any of the numbers
-mean anything:
+A visible-cell hit means at least one selected cell overlaps the rendered field.
+It does **not** mean a correct star identification or attitude solution. FOV labels
+use an approximate 12×12 sampling grid and can miss very small boundary overlaps.
 
-1. **The catalog.** `st_catalog.py` falls back to a uniform random sky. The real
-   sky is clumpy — the galactic plane above all — and a uniform fake sky makes
-   cells look more alike than they are. Point it at Hipparcos.
-2. **The 529-cell convention.** `st_cells.py` implements an equal-area zonal
-   partition that produces exactly 529 cells. If the GLAS document specifies a
-   particular tessellation, replace this file with that one. Confirm with
-   Dr. Lee before generating a full training set — every label depends on it.
-3. **Camera calibration.** `st_pipeline_init` ships a placeholder focal length.
-   A wrong focal length silently rescales every angle, and the histogram will
-   not match anything the network was trained on.
-4. **Thresholds in `st_select_default_cfg`.** Set these from a precision/recall
-   sweep on held-out attitudes, not by feel.
+Default policy: accept scores >= 0.15, keep at most eight, and reduce to one when
+the highest score >= 0.90. Evaluation calls the C selector itself. The output score
+is not a calibrated probability of a correct attitude solution. The saved policy
+sweep shows the recall/candidate-cost tradeoff, including disabling single-cell
+collapse with a confidence threshold > 1.0. Thresholds remain research settings;
+no mission reliability target was supplied.
 
-## Two things to check early
+## Experiments
 
-**Field of view versus cell size.** 529 equal-area cells are about 9° across. At
-the default focal length the frame is a 48° diagonal, so about 24 cells fall in
-view at once and the "shortlist" cannot be shorter than that. Real CubeSat star
-trackers are usually 10–20°. Either narrow the field of view or coarsen the
-partition so a frame covers a small number of cells — otherwise the classifier
-is being asked a question whose answer is always "about two dozen".
+```bash
+OPENBLAS_NUM_THREADS=1 python3 python/benchmark_features.py --epochs 50
+OPENBLAS_NUM_THREADS=1 python3 python/benchmark_matcher.py --n 30
+OPENBLAS_NUM_THREADS=1 python3 python/sweep_fov.py --n 6000 --eval-n 500
+```
 
-**Section 10 of the architecture document.** Before building anything further,
-confirm the feature is actually discriminative: different cells must produce
-distinguishable histograms. `make_dataset.py` gives you the data to check it.
+The feature benchmark uses one 70/15/15 split for 25/50/100-bin histograms and a
+nearest-neighbor feature. These alternatives are research experiments; the active
+C feature stays at 100 bins. The FOV sweep creates isolated `experiments/fx_*`
+artifacts and keeps 529 cells fixed to match the C ABI. It does not overwrite the
+active model. Arbitrary cell-count sweeps need a separately configured C build.
+
+The ground matcher indexes pair angles from an explicit bright-star catalog subset
+(default 2,000), tests rotation hypotheses, verifies at least six unique matches,
+and refines attitude with SVD. It expands selected cells conservatively to include
+potential image stars. Therefore two shortlisted cells do **not** imply searching
+only 2/529 of the catalog. A rejected/unsolved shortlist falls back to full search
+in the benchmark. Offline index construction and shared detection time are excluded
+from online matcher comparison; classifier overhead is included. A 5,000-hypothesis
+budget bounds each solve. This is a reference benchmark, not a flight matcher.
+
+## Limitations and next work
+
+- Results are simulated, not measured on real camera images or flight hardware.
+- Hipparcos coordinates are at epoch J1991.25. Proper motion, aberration, and
+  production catalog quality filtering remain to be implemented. See `data/SOURCE.md`.
+- The renderer uses a sampled Gaussian PSF, read noise, hot pixels, variable
+  brightness/background and detection thresholds. It does not model photon shot
+  noise, spatial background gradients, motion smear, or all detector artifacts.
+- The analytic simulator's threshold approximation is not a substitute for the
+  C detector. Use `--mode rendered` for primary validation.
+- Low-star scenes and overconfident wrong classifications remain failure modes.
+- The 30-frame matcher experiment did not demonstrate a speedup: assisted acquisition
+  with fallback was slower than the full reference search. Optimize and benchmark
+  a realistic onboard catalog index before making runtime-benefit claims.
+- Fixed buffers bound allocation, not full flight qualification. Detector overflow
+  now rejects a frame rather than trusting a truncated star list.
+- The ctypes bridge has static workspaces and is not thread-safe. Use separate
+  processes for parallel data generation.
+
+## Folder layout
+
+`c/`: production C and host tests/bridge. `python/`: training and experiments.
+`data/`: attributed real catalog. `gen/`: reproducible dataset, model, and reports.
+The architecture PDF is the original design reference and predates these changes.
+`CHANGELOG.md` lists the implementation changes. The ZIP contains no Git metadata:
+copy its contents into your existing repository while retaining your own `.git`.

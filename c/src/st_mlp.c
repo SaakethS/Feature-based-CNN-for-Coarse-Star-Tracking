@@ -45,7 +45,10 @@ st_status_t st_mlp_forward(const st_model_t *m,
     int i;
 
     if (!m || !hist || !out_prob) return ST_ERR_NULL;
-    if (!m->W1 || !m->W2 || !m->W3) return ST_ERR_NULL;
+    if (!m->W1 || !m->W2 || !m->W3 || !m->b1 || !m->b2 || !m->b3)
+        return ST_ERR_NULL;
+    for (i = 0; i < ST_NUM_BINS; ++i)
+        if (!isfinite(hist[i])) return ST_ERR_BAD_PARAM;
 
     /* Standardize the input using the statistics captured at training time.
      * Keeping this inside the model is deliberate: it is the single most

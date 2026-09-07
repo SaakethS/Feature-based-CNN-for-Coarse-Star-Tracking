@@ -10,10 +10,17 @@ Run after train.py:
 """
 
 import os
+import json
+from st_experiment import load_model
 import numpy as np
 
-GEN = os.path.join(os.path.dirname(__file__), "..", "gen")
-NUM_BINS, NUM_CELLS, H1, H2, MAX_STARS = 25, 529, 96, 96, 24
+GEN = os.environ.get("ST_GEN_DIR", os.path.join(os.path.dirname(__file__), "..", "gen"))
+# Read back from the artifacts that training actually produced, so this file
+# cannot describe a model different from the one in gen/. ST_NUM_CELLS lets the
+# partition size be swept without editing code.
+NUM_CELLS = int(os.environ.get("ST_NUM_CELLS", "529"))
+from st_features import NUM_BINS, MAX_STARS
+H1, H2 = 96, 96
 
 
 def emit_array(f, name, arr):
@@ -25,13 +32,13 @@ def emit_array(f, name, arr):
     a = np.asarray(arr, dtype=np.float32).ravel()
     f.write(f"static const float {name}[{a.size}] = {{\n")
     for i in range(0, a.size, 8):
-        chunk = ", ".join(f"{v:.9g}f" for v in a[i:i + 8])
+        chunk = ", ".join((lambda s: s if ("." in s or "e" in s) else s + ".0")(f"{v:.9g}") + "f" for v in a[i:i + 8])
         f.write(f"    {chunk},\n")
     f.write("};\n\n")
 
 
 def main():
-    m = np.load(os.path.join(GEN, "model.npz"))
+    m, metadata = load_model(GEN)
     cos_edges = np.load(os.path.join(GEN, "bins.npy")).astype(np.float32)
 
     assert cos_edges.size == NUM_BINS + 1, "bin edge count mismatch"
@@ -69,6 +76,9 @@ def main():
 #endif
 
 """)
+        for key,value in metadata["camera"].items():
+            f.write(f"#define ST_TRAIN_{key.upper()} {float(value):.9e}f\n")
+        f.write("/* Experiment identity: " + metadata["bins_sha256"] + " */\n")
         emit_array(f, "ST_COS_EDGES", cos_edges)
         emit_array(f, "ST_IN_MEAN", m["in_mean"])
         emit_array(f, "ST_IN_SCALE", m["in_scale"])

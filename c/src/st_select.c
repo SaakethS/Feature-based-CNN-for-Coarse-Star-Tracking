@@ -1,5 +1,6 @@
 #include "st_select.h"
 #include <string.h>
+#include <math.h>
 
 void st_select_default_cfg(st_select_cfg_t *cfg)
 {
@@ -23,6 +24,14 @@ st_status_t st_select_cells(const float *prob,
 
     if (!prob || !cfg || !out) return ST_ERR_NULL;
     memset(out, 0, sizeof(*out));
+    out->rejected = 1u;
+    if (!isfinite(cfg->accept_threshold) || cfg->accept_threshold < 0.0f ||
+        cfg->accept_threshold > 1.0f || !isfinite(cfg->confident_threshold) ||
+        cfg->confident_threshold < 0.0f || !isfinite(cfg->tie_margin) ||
+        cfg->tie_margin < 0.0f) return ST_ERR_BAD_PARAM;
+    for (i = 0; i < ST_NUM_CELLS; ++i)
+        if (!isfinite(prob[i]) || prob[i] < 0.0f || prob[i] > 1.0f)
+            return ST_ERR_BAD_PARAM;
 
     /* Selection sort of the top ST_MAX_CANDIDATES over 529 entries. This is
      * 529 * 8 comparisons — cheaper and far more predictable than sorting the

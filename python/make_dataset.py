@@ -24,7 +24,7 @@ from st_catalog import Catalog
 from st_sim import NoiseModel, simulate_frame
 
 IMG_W, IMG_H = 1280, 960
-GEN = os.path.join(os.path.dirname(__file__), "..", "gen")
+GEN = os.environ.get("ST_GEN_DIR", os.path.join(os.path.dirname(__file__), "..", "gen"))
 
 
 def frame_cells(cam, R_ci, width, height, grid=12):
@@ -46,66 +46,48 @@ def frame_cells(cam, R_ci, width, height, grid=12):
 
 
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--n", type=int, default=20000, help="training frames")
-    ap.add_argument("--seed", type=int, default=1)
-    ap.add_argument("--catalog", default=None, help="Hipparcos CSV, optional")
-    ap.add_argument("--fx", type=float, default=1800.0)
-    args = ap.parse_args()
+    from st_experiment import acquire,metadata,digest
+    import json
+    ap=argparse.ArgumentParser()
+    ap.add_argument('--n',type=int,default=20000)
+    ap.add_argument('--seed',type=int,default=1)
+    ap.add_argument('--catalog',default=None)
+    ap.add_argument('--fx',type=float,default=1800.)
+    ap.add_argument('--mode',choices=['analytic','rendered'],default='rendered')
+    args=ap.parse_args()
+    if args.n<20 or args.fx<=0: ap.error('Need n >= 20 and fx > 0')
+    os.makedirs(GEN,exist_ok=True)
+    cam=F.Camera(args.fx,args.fx,IMG_W/2,IMG_H/2)
+    cat=Catalog.load(args.catalog);noise=NoiseModel();rng=np.random.default_rng(args.seed)
+    meta=metadata(cam,cat,noise,args.mode,args.seed)
+    # Independent fit stream. Validation/test samples never set the bin edges.
+    fit_rng=np.random.default_rng(np.random.SeedSequence([args.seed,5821]))
+    angles=[]
+    for _ in range(min(args.n,1000)):
+        fr=acquire(cat,cam,fit_rng,noise,args.mode)
+        if fr['status']==0: angles.append(F.pairwise_angles(cam.pixels_to_vectors(fr['uv'])))
+    if not angles: raise ValueError('No usable bin-fitting frames')
+    edges,_=F.fit_quantile_bins(np.concatenate(angles));np.save(os.path.join(GEN,'bins.npy'),edges)
+    meta['bins_sha256']=digest(os.path.join(GEN,'bins.npy'))
+    X=[];Y=[];counts=[];used=[];vectors=[];quaternions=[];failures={}
+    for i in range(args.n):
+        fr=acquire(cat,cam,rng,noise,args.mode)
+        if fr['status']:
+            key=str(fr['status']);failures[key]=failures.get(key,0)+1;continue
+        vec=cam.pixels_to_vectors(fr['uv']);h=F.histogram(vec,edges)
+        if h is None: failures['histogram']=failures.get('histogram',0)+1;continue
+        y=np.zeros(NUM_CELLS,np.float32);y[frame_cells(cam,fr['R'],IMG_W,IMG_H)]=1
+        padded=np.zeros((24,3),np.float32);padded[:len(vec)]=vec
+        X.append(h);Y.append(y);counts.append(fr['n_detected']);used.append(len(vec))
+        vectors.append(padded);quaternions.append(fr['q'])
+        if (i+1)%500==0: print(f'generated {i+1}/{args.n}',flush=True)
+    if len(X)<20: raise ValueError('Fewer than 20 usable training frames')
+    meta.update(attempted=args.n,kept=len(X),failures=failures)
+    np.savez_compressed(os.path.join(GEN,'dataset.npz'),X=np.asarray(X),Y=np.asarray(Y),
+        n_detected=np.asarray(counts),n_used=np.asarray(used),vectors=np.asarray(vectors),
+        q=np.asarray(quaternions),metadata_json=json.dumps(meta,sort_keys=True))
+    print(f'kept {len(X)}/{args.n} frames; failures {failures}')
+    print(f'labels per frame: mean {np.asarray(Y).sum(1).mean():.2f}')
+    print(f'cells never seen: {(np.asarray(Y).sum(0)==0).sum()}/{NUM_CELLS}')
 
-    os.makedirs(GEN, exist_ok=True)
-    rng = np.random.default_rng(args.seed)
-
-    cam = F.Camera(fx=args.fx, fy=args.fx,
-                   cx=IMG_W / 2.0, cy=IMG_H / 2.0, k1=0.0, k2=0.0)
-    print(f"camera: fx={args.fx:.0f} px, diagonal FOV "
-          f"{cam.fov_deg(IMG_W, IMG_H):.2f} deg")
-
-    cat = Catalog.load(args.catalog)
-    print(f"catalog: {len(cat)} stars"
-          f"{' (SYNTHETIC PLACEHOLDER)' if args.catalog is None else ''}")
-    noise = NoiseModel()
-
-    # ---- pass 1: fit the bin edges -------------------------------------
-    n_fit = min(args.n, 2000)
-    angles = []
-    for _ in range(n_fit):
-        fr = simulate_frame(cat, cam, IMG_W, IMG_H, rng, noise)
-        if len(fr["uv"]) < 2:
-            continue
-        uv, _ = F.select_brightest(fr["uv"], fr["flux"])
-        vecs = cam.pixels_to_vectors(uv)
-        angles.append(F.pairwise_angles(vecs))
-    angles = np.concatenate(angles)
-    cos_edges, ang_edges = F.fit_quantile_bins(angles)
-    np.save(os.path.join(GEN, "bins.npy"), cos_edges)
-    print(f"bins fitted on {len(angles)} pairs, angular range "
-          f"{np.degrees(ang_edges[0]):.2f}..{np.degrees(ang_edges[-1]):.2f} deg")
-
-    # ---- pass 2: histograms and labels ---------------------------------
-    X = np.zeros((args.n, F.NUM_BINS), dtype=np.float32)
-    Y = np.zeros((args.n, NUM_CELLS), dtype=np.float32)
-    kept = 0
-    for _ in range(args.n):
-        fr = simulate_frame(cat, cam, IMG_W, IMG_H, rng, noise)
-        if len(fr["uv"]) < 4:
-            continue                      # too few stars to say anything
-        uv, _ = F.select_brightest(fr["uv"], fr["flux"])
-        vecs = cam.pixels_to_vectors(uv)
-        h = F.histogram(vecs, cos_edges)
-        if h is None:
-            continue
-        cells = frame_cells(cam, fr["R"], IMG_W, IMG_H)
-        X[kept] = h
-        Y[kept, cells] = 1.0
-        kept += 1
-
-    X, Y = X[:kept], Y[:kept]
-    np.savez_compressed(os.path.join(GEN, "dataset.npz"), X=X, Y=Y)
-    print(f"kept {kept}/{args.n} frames")
-    print(f"labels per frame: mean {Y.sum(1).mean():.2f}, max {Y.sum(1).max():.0f}")
-    print(f"cells never seen: {(Y.sum(0) == 0).sum()}/{NUM_CELLS}")
-
-
-if __name__ == "__main__":
-    main()
+if __name__=='__main__': main()

@@ -101,7 +101,7 @@ def visible_stars(cat, R_ci, cam, width, height, mag_limit):
     return uv[inside], mags[inside], v_cam[inside]
 
 
-def mag_to_flux(mag, zero_point=1.0e4):
+def mag_to_flux(mag, zero_point=6.0e3):
     """Visual magnitude -> relative flux.
 
     The magnitude scale is logarithmic and inverted: five magnitudes is a
@@ -121,6 +121,12 @@ def simulate_frame(cat, cam, width, height, rng, noise=None, q=None):
 
     uv, mags, v_cam = visible_stars(cat, R, cam, width, height, p["mag_limit"])
     flux = mag_to_flux(mags)
+
+    # Approximate the pixel threshold using Gaussian peak intensity. Rendered
+    # training uses the real C detector and is preferred for final experiments.
+    peak = flux / (2.0 * np.pi * p["psf_sigma_px"] ** 2)
+    detected = peak > p["detect_sigma"] * max(p["read_noise"], 0.5)
+    uv, flux = uv[detected], flux[detected]
 
     # Stars lost to noise, occlusion, or a threshold that happened to sit just
     # above them. Dimmer stars are lost preferentially, which is what really
@@ -168,9 +174,6 @@ def render_image(cat, cam, width, height, rng, noise=None, q=None):
     # Each star is a small Gaussian blob. Rendering only a local window around
     # each star instead of evaluating the PSF over the whole frame is what
     # keeps this merely slow rather than unusable.
-    yy, xx = np.mgrid[-half:half + 1, -half:half + 1]
-    kern = np.exp(-(xx ** 2 + yy ** 2) / (2.0 * sig * sig))
-    kern /= kern.sum()
 
     for (u, v), f in zip(uv, flux):
         cu, cv = int(round(u - 0.5)), int(round(v - 0.5))
@@ -178,9 +181,12 @@ def render_image(cat, cam, width, height, rng, noise=None, q=None):
         y0, y1 = max(0, cv - half), min(height, cv + half + 1)
         if x0 >= x1 or y0 >= y1:
             continue
-        kx0, ky0 = x0 - (cu - half), y0 - (cv - half)
-        img[y0:y1, x0:x1] += f * kern[ky0:ky0 + (y1 - y0),
-                                      kx0:kx0 + (x1 - x0)]
+        # Evaluate the Gaussian at pixel centers using the true fractional
+        # star position; do not snap the light distribution to the nearest pixel.
+        yy_local, xx_local = np.mgrid[y0:y1, x0:x1]
+        weights = np.exp(-((xx_local + 0.5 - u)**2 +
+                           (yy_local + 0.5 - v)**2) / (2.0 * sig * sig))
+        img[y0:y1, x0:x1] += f * weights / (2.0 * np.pi * sig * sig)
 
     img += rng.normal(0.0, p["read_noise"], img.shape)
     n_hot = int(p["hot_pixel_rate"] * width * height)

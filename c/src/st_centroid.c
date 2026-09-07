@@ -1,5 +1,6 @@
 #include "st_centroid.h"
 #include <string.h>
+#include <math.h>
 
 /* ---- background estimation ---------------------------------------------
  * We want a threshold that adapts to whatever the sensor is doing right now:
@@ -82,7 +83,8 @@ st_status_t st_detect_stars(const uint8_t *img,
     st_status_t rc;
 
     if (!img || !ws || !out_stars || !out_n) return ST_ERR_NULL;
-    if (max_stars <= 0) return ST_ERR_BAD_PARAM;
+    if (max_stars <= 0 || !isfinite(thresh_sigma) || thresh_sigma <= 0.0f)
+        return ST_ERR_BAD_PARAM;
     *out_n = 0;
 
     rc = st_estimate_background(img, &bg, &sigma);
@@ -148,7 +150,7 @@ st_status_t st_detect_stars(const uint8_t *img,
 
             /* Reject blobs that are too small (hot pixels, cosmic rays) or
              * too large (stray light, smear, a planet). */
-            if (overflowed) continue;
+            if (overflowed) return ST_ERR_OVERFLOW;
             if (npix < ST_MIN_BLOB_PIXELS) continue;
             if (npix > ST_MAX_BLOB_PIXELS) continue;
             if (sum_w <= 0.0) continue;

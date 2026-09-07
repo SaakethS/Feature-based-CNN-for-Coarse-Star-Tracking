@@ -45,11 +45,12 @@
  * N*(N-1)/2, so this constant is what bounds the runtime cost of the whole
  * feature stage. N = 24 -> 276 pairs. */
 #define ST_MAX_STARS 24
+#define ST_MIN_STARS 4
 #define ST_MAX_PAIRS ((ST_MAX_STARS * (ST_MAX_STARS - 1)) / 2)
 
 /* Number of histogram bins in the pairwise-angular-distance feature.
  * Must match the training pipeline exactly. */
-#define ST_NUM_BINS 25
+#define ST_NUM_BINS 100
 
 /* ---- Sky partition ----------------------------------------------------- */
 /* Number of sky cells the classifier chooses among (GLAS convention). */

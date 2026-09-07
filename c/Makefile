@@ -53,6 +53,13 @@ run: st_pipeline_test
 	./st_pipeline_test ../gen/test_frame.pgm
 
 clean:
-	rm -f $(OBJ) $(OBJ:.o=.d) $(BIN)
+	rm -f $(OBJ) $(OBJ:.o=.d) $(BIN) libstartracker.so
 
 .PHONY: all clean run pi
+
+# Linux host bridge for rendered training, evaluation, and regression tests.
+libstartracker.so: $(SRC) tests/bridge.c $(wildcard include/*.h) ../gen/model_params.h
+	$(CC) $(CFLAGS) -fPIC -shared $(INCS) -o $@ $(SRC) tests/bridge.c $(LDLIBS)
+
+bridge: libstartracker.so
+.PHONY: bridge

@@ -7,15 +7,16 @@ int st_select_brightest(st_star_t *stars, int n, int keep)
     if (!stars || n <= 0) return 0;
     if (keep > n) keep = n;
 
-    /* Partial insertion sort: we only need the first `keep` entries in
-     * descending flux order, so we stop after placing that many. Cost is
-     * O(keep * n), which at keep=24 and n<=512 is a few thousand compares. */
-    for (i = 0; i < keep; ++i) {
-        int best = i;
-        st_star_t tmp;
-        for (j = i + 1; j < n; ++j)
-            if (stars[j].flux > stars[best].flux) best = j;
-        tmp = stars[i]; stars[i] = stars[best]; stars[best] = tmp;
+    if (keep < 0) return 0;
+    /* Stable descending insertion sort: ties preserve original input order. */
+    for (i = 1; i < n; ++i) {
+        st_star_t value = stars[i];
+        j = i;
+        while (j > 0 && stars[j - 1].flux < value.flux) {
+            stars[j] = stars[j - 1];
+            --j;
+        }
+        stars[j] = value;
     }
     return keep;
 }
@@ -51,7 +52,7 @@ st_status_t st_histogram(const st_vec3_t *vecs, int n,
             if (d > bins->cos_edges[0]) continue;
             if (d <= bins->cos_edges[ST_NUM_BINS]) continue;
 
-            /* Linear scan over 25 edges. A binary search would be asymptotically
+            /* Linear scan over the configured edges. A binary search would be asymptotically
              * better but is slower in practice at this size and harder to audit.
              * Bin i holds pairs with cos_edges[i] >= d > cos_edges[i+1]. */
             for (b = 0; b < ST_NUM_BINS; ++b) {

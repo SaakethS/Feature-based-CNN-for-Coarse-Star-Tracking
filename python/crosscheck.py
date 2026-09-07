@@ -28,7 +28,7 @@ from st_catalog import Catalog
 from st_sim import NoiseModel, simulate_frame, render_image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-GEN = os.path.join(HERE, "..", "gen")
+GEN = os.environ.get("ST_GEN_DIR", os.path.join(HERE, "..", "gen"))
 CBIN = os.path.join(HERE, "..", "c", "st_crosscheck")
 IMG_W, IMG_H = 1280, 960
 
@@ -102,7 +102,7 @@ def check_features_and_network(n_cases=200, seed=7):
 
         c_hist, c_prob, err = run_c(cam, uv, flux)
         if err:
-            continue
+            raise RuntimeError(f"C crosscheck failed: {err}")
 
         uv_s, _ = F.select_brightest(uv, flux)
         vecs = cam.pixels_to_vectors(uv_s)
@@ -118,7 +118,7 @@ def check_features_and_network(n_cases=200, seed=7):
     print(f"[features] {n_ok} cases")
     print(f"  max |C - Python| histogram : {worst_h:.3e}  (tol {HIST_TOL:.0e})")
     print(f"  max |C - Python| network   : {worst_p:.3e}  (tol {PROB_TOL:.0e})")
-    ok = worst_h <= HIST_TOL and worst_p <= PROB_TOL and n_ok > 0
+    ok = worst_h <= HIST_TOL and worst_p <= PROB_TOL and n_ok >= max(1, int(0.8 * n_cases))
     print("  RESULT:", "PASS" if ok else "FAIL")
     return ok
 
