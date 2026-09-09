@@ -8,3 +8,6 @@ c/st_pipeline_test
 .venv/
 experiments/
 gen/test_frame.pgm
+
+# Personal resume talking points: kept locally, deliberately not published.
+RESUME_BULLETS.md
