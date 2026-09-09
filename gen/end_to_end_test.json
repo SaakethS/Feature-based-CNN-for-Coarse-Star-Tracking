@@ -1,7 +1,7 @@
 {
   "attempted": 30,
   "usable": 30,
-  "max_histogram_difference": 7.450580596923828e-09,
-  "max_probability_difference": 7.529500890557372e-07,
+  "max_histogram_difference": 3.725290298461914e-09,
+  "max_probability_difference": 1.6670509123684063e-06,
   "status": "PASS"
 }

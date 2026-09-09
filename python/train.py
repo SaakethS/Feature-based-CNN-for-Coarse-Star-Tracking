@@ -16,8 +16,17 @@ Loss: binary cross-entropy summed over the 529 outputs, not softmax
 cross-entropy. Several cells are genuinely in the field of view at once, so
 the outputs are independent yes/no questions, not a single choice.
 
+Also writes gen/training_history.json: the per-epoch training and validation
+loss, so the learning curve can be plotted (python/plot_loss.py) and two runs on
+different dataset sizes can be compared without retraining either of them.
+
+Best-validation-epoch weights are restored at the end regardless of --epochs, and
+the RNG stream is seeded, so a short run that reaches the minimum produces the
+same weights as a long one that passes it. Survey the curve with a long run once,
+then set --epochs to the epoch it identified so the recorded provenance matches.
+
 Run:
-  python3 train.py --epochs 60
+  python3 train.py --epochs 21
 """
 
 import argparse
@@ -123,6 +132,11 @@ def main():
     ap.add_argument("--batch", type=int, default=256)
     ap.add_argument("--lr", type=float, default=3e-3)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--history", default=None,
+                    help="where to write the per-epoch loss curve "
+                         "(default: gen/training_history.json)")
+    ap.add_argument("--tag", default=None,
+                    help="label for this run inside the history file")
     args = ap.parse_args()
     if args.epochs < 1 or args.batch < 1 or args.lr <= 0:
         ap.error("epochs, batch and lr must be positive")
@@ -151,6 +165,10 @@ def main():
     best_loss = float("inf")
     best_params = None
     best_epoch = 0
+    # Per-epoch record. Training loss is the mean over the epoch's minibatches,
+    # so it lags the validation loss by roughly half an epoch of progress; that
+    # is the usual reason an early train curve sits above the validation curve.
+    history = []
     for ep in range(1, args.epochs + 1):
         idx = rng.permutation(len(Ztr))
         loss = 0.0
@@ -163,10 +181,13 @@ def main():
         if val_loss < best_loss:
             best_loss, best_epoch = val_loss, ep
             best_params = {k: getattr(model, k).copy() for k in model.params}
-        if ep % 10 == 0 or ep == 1:
+        record = dict(epoch=ep, train_loss=loss, val_loss=val_loss)
+        if ep % 10 == 0 or ep == 1 or ep == args.epochs:
             rec, sl = evaluate(model, Zva, Yva)
-            print(f"epoch {ep:3d}  loss {loss:.4f}  "
+            record.update(val_top8_recall=rec, val_mean_shortlist=sl)
+            print(f"epoch {ep:3d}  loss {loss:.4f}  val loss {val_loss:.4f}  "
                   f"top-8 recall {rec:.3f}  mean shortlist {sl:.1f}")
+        history.append(record)
 
     for k, value in best_params.items(): setattr(model, k, value)
     metadata["training"] = dict(seed=args.seed, epochs=args.epochs, best_epoch=best_epoch,
@@ -180,6 +201,22 @@ def main():
              W1=model.W1, b1=model.b1, W2=model.W2, b2=model.b2,
              W3=model.W3, b3=model.b3, in_mean=mean, in_scale=scale)
     print("wrote gen/model.npz")
+
+    # The learning curve is a separate artifact, not part of model.npz: it is
+    # diagnostic output, and nothing in the C export path may depend on it.
+    history_path = args.history or os.path.join(GEN, "training_history.json")
+    curve = dict(tag=args.tag or f"{len(X)} frames",
+                 train_frames=int(len(Xtr)), val_frames=int(len(Xva)),
+                 attempted=metadata.get("attempted"), kept=metadata.get("kept"),
+                 epochs=args.epochs, batch=args.batch, lr=args.lr, seed=args.seed,
+                 best_epoch=best_epoch, best_val_loss=best_loss,
+                 final_top8_recall=rec, final_mean_shortlist=sl,
+                 dataset_sha256=metadata["dataset_sha256"],
+                 bins_sha256=metadata["bins_sha256"], history=history)
+    with open(history_path, "w") as fh:
+        json.dump(curve, fh, indent=2)
+        fh.write("\n")
+    print(f"wrote {history_path}")
 
 
 if __name__ == "__main__":
